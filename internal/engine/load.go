@@ -1,34 +1,25 @@
-package loadtest
+package engine
 
 import (
 	"context"
 	"fmt"
 	"net/http"
-	"stress/internal/config"
 	"stress/internal/model"
 	"stress/internal/resource"
 	"sync"
 	"time"
 )
 
-type Engine struct {
-	Client *http.Client
-}
-
-func NewEngine() *Engine {
-	return &Engine{}
-}
-
-func (e *Engine) Run(parentctx context.Context, cfg config.TestConfig) (model.TestResult, error) {
+func (e *engine) Load(parentctx context.Context) (model.TestResult, error) {
 	//validate config
-	err := cfg.Validate()
+	err := e.cfg.Validate()
 	if err != nil {
 		return model.TestResult{}, err
 	}
 
 	//config client
 	client := &http.Client{
-		Timeout: cfg.Timeout,
+		Timeout: e.cfg.Timeout,
 		CheckRedirect: func(
 			req *http.Request,
 			via []*http.Request,
@@ -37,10 +28,10 @@ func (e *Engine) Run(parentctx context.Context, cfg config.TestConfig) (model.Te
 		},
 	}
 
-	e.Client = client
+	e.client = client
 
 	//define ctx
-	testCtx, cancel := context.WithTimeout(parentctx, cfg.Duration)
+	testCtx, cancel := context.WithTimeout(parentctx, e.cfg.Duration)
 	defer cancel()
 
 	//start monitoring
@@ -53,10 +44,10 @@ func (e *Engine) Run(parentctx context.Context, cfg config.TestConfig) (model.Te
 
 	//start the test
 	start := time.Now()
-	results := make(chan model.RequestResult, cfg.Concurrency)
+	results := make(chan model.RequestResult, e.cfg.Concurrency)
 	var workers sync.WaitGroup
 
-	for i := 0; i < int(cfg.Concurrency); i++ {
+	for i := 0; i < int(e.cfg.Concurrency); i++ {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
@@ -65,7 +56,10 @@ func (e *Engine) Run(parentctx context.Context, cfg config.TestConfig) (model.Te
 					return
 				}
 
-				result := SendRequest(testCtx, &cfg, e.Client)
+				result, err := e.worker.SendRequest(testCtx, e.client)
+				if err != nil {
+		            return 
+	            }
 				results <- result
 			}
 		}()
@@ -78,12 +72,11 @@ func (e *Engine) Run(parentctx context.Context, cfg config.TestConfig) (model.Te
 	}()
 
 	var summary model.TestResult
-	summary.Url = cfg.TargetUrl
+	summary.Url = e.cfg.TargetUrl
 	summary.StartedAt = start
 
 	var totalLatency time.Duration
 
-	// One goroutine owns all metric updates.
 	for result := range results {
 		summary.TotalRequests++
 

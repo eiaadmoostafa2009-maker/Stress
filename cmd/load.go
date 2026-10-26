@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"os"
 	"stress/internal/config"
-	"stress/internal/loadtest"
+	"stress/internal/engine"
+	"stress/internal/reporter"
 	"stress/internal/service"
+	"stress/internal/worker"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -24,7 +26,7 @@ var (
 	jwt string
 )
 var runCmd = &cobra.Command{
-	Use:   "run",
+	Use:   "load",
 	Short: "the command that starts the whole test",
 	Long: `the command that config the url, number of workers and duration
 	to start the whole test and return the results`,
@@ -33,13 +35,18 @@ var runCmd = &cobra.Command{
 			TargetUrl:   targetUrl,
 			Concurrency: concurrency,
 			Duration:    duration,
+			JWT: jwt,
+	        Method: method,
+	        Body: body,
 		}
 
 		//logic
-		loadtest := loadtest.NewEngine()
-		svc := service.NewLoadTestService(*loadtest, os.Stdout)
+		worker := worker.NewWorker(cfg)
+		engine := engine.NewEngine(cfg, worker)
+		reporter := reporter.NewReporter(os.Stdout)
+		svc := service.NewService(engine, reporter, cfg, worker)
 
-		err := svc.Run(context.Background(), cfg)
+		err := svc.Load(context.Background())
 
 		if err != nil {
 			return fmt.Errorf("run command: %w", err)

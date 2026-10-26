@@ -1,34 +1,33 @@
-package loadtest
+package worker
 
 import (
 	"context"
 	"io"
 	"net/http"
-	"stress/internal/config"
 	"stress/internal/model"
 	"strings"
 	"time"
 )
 
-func SendRequest(ctx context.Context, cfg *config.TestConfig, client *http.Client) model.RequestResult {
+func(w *worker) SendRequest(ctx context.Context, client *http.Client) (model.RequestResult, error) {
 	start := time.Now()
 
 	//validate the config
-	if err := cfg.Validate(); err != nil {
-		return model.RequestResult{}
+	if err := w.cfg.Validate(); err != nil {
+		return model.RequestResult{}, err
 	}
 
 	//start a request
-	req, err := http.NewRequestWithContext(ctx, cfg.Method, cfg.TargetUrl, strings.NewReader(cfg.Body))
+	req, err := http.NewRequestWithContext(ctx, w.cfg.Method, w.cfg.TargetUrl, strings.NewReader(w.cfg.Body))
 
-	if cfg.JWT != "" {
+	if w.cfg.JWT != "" {
        req.Header.Set(
          "Authorization",
-         "Bearer "+cfg.JWT,
+         "Bearer "+w.cfg.JWT,
         )
     }
  
-    if cfg.Body != "" {
+    if w.cfg.Body != "" {
        req.Header.Set(
          "Content-Type",
          "application/json",
@@ -40,7 +39,7 @@ func SendRequest(ctx context.Context, cfg *config.TestConfig, client *http.Clien
 			Failed:  true,
 			Error:   err.Error(),
 			Latency: time.Since(start),
-		}
+		}, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -48,7 +47,7 @@ func SendRequest(ctx context.Context, cfg *config.TestConfig, client *http.Clien
 			Failed:  true,
 			Error:   err.Error(),
 			Latency: time.Since(start),
-		}
+		}, err
 	}
 	defer resp.Body.Close()
 
@@ -66,5 +65,5 @@ func SendRequest(ctx context.Context, cfg *config.TestConfig, client *http.Clien
 		Failed:     resp.StatusCode >= 500,
 	}
 
-	return requestResult
+	return requestResult, nil
 }
