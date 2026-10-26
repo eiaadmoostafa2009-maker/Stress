@@ -16,6 +16,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var(
+	requestUrl string
+	requestJwt string
+	requestMethod string
+    requestBody string
+)
+
 // reqCmd represents the req command
 var reqCmd = &cobra.Command{
 	Use:   "req",
@@ -27,10 +34,10 @@ var reqCmd = &cobra.Command{
 	3-check errors`,
 	RunE: func(cmd *cobra.Command, args []string) error{
 		cfg := config.TestConfig{
-			TargetUrl:   targetUrl,
-			JWT: jwt,
-	        Method: method,
-	        Body: body,
+			TargetUrl:   requestUrl,
+			JWT: requestJwt,
+	        Method: requestMethod,
+	        Body: requestBody,
 		}
 
 		worker := worker.NewWorker(cfg)
@@ -49,34 +56,34 @@ func init() {
 	rootCmd.AddCommand(reqCmd)
 
 	
-	runCmd.Flags().StringVarP(
-		&targetUrl, 
+	reqCmd.Flags().StringVarP(
+		&requestUrl, 
 		"url", 
 		"u", 
 		"", 
 		"The URL to test",
 	)
-	runCmd.Flags().StringVarP(
-		&method, 
+	reqCmd.Flags().StringVarP(
+		&requestMethod, 
 		"method", 
 		"m", 
 		"GET", 
 		"request method: GET, POST, PUT, PATCH, DELETE",
 	)
-	runCmd.Flags().StringVarP(
-        &body,
+	reqCmd.Flags().StringVarP(
+        &requestBody,
         "body",
 		"b",
         "",
         "Raw request body",
     ) 
-	runCmd.Flags().StringVarP(
-        &jwt,
+	reqCmd.Flags().StringVarP(
+        &requestJwt,
         "jwt",
 		"j",
         "",
         "JWT access token for authenticated requests",
     )
 
-	_ = runCmd.MarkFlagRequired("url")
+	_ = reqCmd.MarkFlagRequired("url")
 }

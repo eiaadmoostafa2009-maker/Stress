@@ -25,7 +25,7 @@ var (
 	body string 
 	jwt string
 )
-var runCmd = &cobra.Command{
+var loadCmd = &cobra.Command{
 	Use:   "load",
 	Short: "the command that starts the whole test",
 	Long: `the command that config the url, number of workers and duration
@@ -56,43 +56,43 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(loadCmd)
 
-	runCmd.Flags().StringVarP(
+	loadCmd.Flags().StringVarP(
 		&targetUrl, 
 		"url", 
 		"u", 
 		"", 
 		"The URL to test",
 	)
-	runCmd.Flags().UintVarP(
+	loadCmd.Flags().UintVarP(
 		&concurrency, 
 		"concurrency", 
 		"c", 
 		1, 
 		"Number of concurrent requests",
 	)
-	runCmd.Flags().DurationVarP(
+	loadCmd.Flags().DurationVarP(
 		&duration, 
 		"duration", 
 		"d", 30*time.Second, 
 		"Duration of the test in seconds",
 	)
-	runCmd.Flags().StringVarP(
+	loadCmd.Flags().StringVarP(
 		&method, 
 		"method", 
 		"m", 
 		"GET", 
 		"request method: GET, POST, PUT, PATCH, DELETE",
 	)
-	runCmd.Flags().StringVarP(
+	loadCmd.Flags().StringVarP(
         &body,
         "body",
 		"b",
         "",
         "Raw request body",
     ) 
-	runCmd.Flags().StringVarP(
+	loadCmd.Flags().StringVarP(
         &jwt,
         "jwt",
 		"j",
@@ -100,5 +100,5 @@ func init() {
         "JWT access token for authenticated requests",
     )
 
-	_ = runCmd.MarkFlagRequired("url")
+	_ = loadCmd.MarkFlagRequired("url")
 }
