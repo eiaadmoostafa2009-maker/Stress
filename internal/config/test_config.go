@@ -31,11 +31,11 @@ func (c *TestConfig) Validate() error {
 		return err
 	}
 
-	if c.Concurrency == 0 || c.Concurrency > 500 {
+	if c.Concurrency > 500 {
 		return fmt.Errorf("Concurrency must be greater than 1 and less than or equal to 500")
 	}
 
-	if c.Duration <= 0 || c.Duration > 5*time.Minute {
+	if c.Duration < 0 || c.Duration > 5*time.Minute {
 		return fmt.Errorf("Duration must be greater than 0 and less than or equal to 5 minutes")
 	}
 
