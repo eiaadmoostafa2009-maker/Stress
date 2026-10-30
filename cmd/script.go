@@ -11,8 +11,8 @@ import (
 )
 
 // scriptCmd represents the script command
-var scriptCmd = &cobra.Command{
-	Use:   "script",
+var runCmd = &cobra.Command{
+	Use:   "run",
 	Short: "test your api with a configured script",
 	Long: `Allow stress to test your api with a scrpt you have written already like this:
     
@@ -56,15 +56,5 @@ end
 }
 
 func init() {
-	rootCmd.AddCommand(scriptCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// scriptCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// scriptCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.AddCommand(runCmd)
 }
